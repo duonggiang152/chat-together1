@@ -20,8 +20,8 @@ const port = parseInt(PORT || '3000', 10);
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
-
 const bootstrap = async () => {
+
   await app.prepare();
   const server = express()
   const httpServer = new http.Server(server);
@@ -40,7 +40,7 @@ const bootstrap = async () => {
   server.use(roomRouter);
   server.use(friendRouter)
   server.use(messageRouter)
-  server.use(express.static('public'))
+  server.use(express.static('./public'))
   server.all('*', (req, res) => {
     return handle(req, res)
   })

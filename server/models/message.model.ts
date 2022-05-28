@@ -16,6 +16,9 @@ class Message {
         if(!message) throw new Error("tin Không tồn tại")
         return message
     }
+    static async sendMessage(roomID: String, message: Object, userSendID: String) {
+        
+    }
 }
 
 export default MessageModel;

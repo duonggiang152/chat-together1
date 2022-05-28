@@ -138,10 +138,10 @@ class User {
      */
     /**
      * Gửi event đến client
-     * @param io là io controller dược cung cấp bởi socket.io
      * @param userID 
      * @param eventName 
      * @param data 
+     * @param exclude Danh sách socketID mà ko muốn gửi đến
      * @returns 
      */
     static async EventToUser(userID: string, eventName: string, data: object, exclude: string[] = []) {

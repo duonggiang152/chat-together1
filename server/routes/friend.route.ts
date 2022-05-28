@@ -196,7 +196,6 @@ router.post('/api/friend/accept-friend-request/:id', passport.authenticate("jwt"
                 }
             ]
         });
-        console.log(isExistGroup);
         // Nếu chưa có tiến hành tạo và gửi socket
         if (!isExistGroup) {
             console.log("Tạo Group");

@@ -279,8 +279,13 @@ Router.post('/api/login', async (req, res) => {
                     return res.json()
                 }
                 // result = true : tài khoản và mật khẩu đúng, false ngược lại
+                interface PayloadType {
+                    _id: string,
+                    username: string,
+                    fullname: string
+                }
                 if (result) {
-                    const payload = {
+                    const payload : PayloadType = {
                         _id: user._id,
                         username: user.username,
                         fullname: user.fullname

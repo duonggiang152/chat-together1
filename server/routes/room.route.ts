@@ -1,47 +1,44 @@
 import express from 'express';
 import passport from 'passport';
-import UserModel from '../models/user.model';
-import RoomModel from '../models/room.model';
+import UserModel, { User } from '../models/user.model';
+import RoomModel, { Room } from '../models/room.model';
+import SocketIO from '../../server/helpers/socketIO';
+import EmtyMemberInRoom from '../../server/helpers/exception/EmtyMemberInRoom';
+import RequireAtleastTowMember from '../../server/helpers/exception/RequireAtleastTowMember';
+import UnknownFriendRelation from '../../server/helpers/exception/UnknownFriendRelation';
 // import { Request, Response } from 'express';
 // import IRoom, { IRoomModel } from 'server/types/room.type';
 // import { Notification } from '../models/notification.model';
 // import SocketManager from '../helpers/socketManager';
 const Router = express.Router();
 /**
- * Tạo phòng
+ * Tạo phòng public, và cho phép nhiều thành viên trong phòng
  */
 Router.post('/api/room', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
-        const userID = req.auth?._id.toString()!;
-        const { userIDs, name: groupName } = req.body as { userIDs: string[], name: string };
-        if (userIDs.length === 0) return res.status(400).json({ message: "Bạn cần thêm ít nhất một user để tạo group" })
-        let NAME = groupName;
-        if (!groupName) {
-            NAME = `Nhóm của: ${req.auth?.username}`
-            const userNames = await Promise.all(userIDs.map(async (userID) => {
-                const user = await UserModel.findById(userID)
-                return user?.username
-            }))
-            userNames.forEach((username) => {
-                if (username) NAME += `, ${username}`
-            })
-        }
-        const result = await RoomModel.create({
-            name: NAME,
-            isGroup: true,
-            userIDs,
-            ownerID: userID,
-            settings: {},
-        });
-        return res.status(200).json(result)
+        
+        const userID = req.auth?._id as string
+        const roomInfo = await Room.createGroupRoom(req.body.name, req.body.memberIDs, userID) as unknown as Object
+        // gửi socket
+        let groupMemberIDs = req.body.memberIDs as String[]
+        groupMemberIDs.push(userID)
+        const currentSocket = req.headers['x-exclude-socket-id'] as string;
+        groupMemberIDs.forEach((memberID ) => {
+            User.EventToUser(memberID as string, 'room-notification', {...roomInfo}, [currentSocket] )
+        })
+        return res.status(200).json(roomInfo)
     } catch (err) {
+        if(err instanceof EmtyMemberInRoom || err instanceof RequireAtleastTowMember ) 
+            return res.status(403).json({errcode: 1, message: "Không tồn tại danh sách memberIDs hoặc memberIDs có ít hơn 2 người"})
+        if(err instanceof UnknownFriendRelation) 
+            return res.status(403).json({errcode: 2, message: 'Phải là bạn thì mới tạo được phòng'})
         console.log(err);
         return res.status(500).json({ message: "lỗi hệ thống" })
     }
 })
-// /**
-//  * Thêm thành viên vào phòng
-//  */
+/**
+ * Thêm thành viên vào phòng
+ */
 // Router.post("/api/room/add-member/:roomid/:userid", passport.authenticate('jwt', { session: false }), async (req, res) => {
 //     // khoi tao bien cuc bo
 //     try {

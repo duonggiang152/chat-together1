@@ -4,7 +4,6 @@ import Link from 'next/link';
 import styles from './list-group.module.scss';
 
 const Group = () => {
-
 	return (
 		<div className={styles.group}>
 			<Avatar
